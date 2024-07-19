@@ -1,0 +1,14 @@
+version: '3.4'
+
+services:
+  zipkin-server:
+    image: openzipkin/zipkin:3.4.0
+    restart: always
+    ports:
+      - 9411:9411
+    networks:
+      - sc-network
+
+networks:
+  sc-network:
+    driver: bridge
