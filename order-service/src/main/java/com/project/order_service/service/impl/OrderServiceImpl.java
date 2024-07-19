@@ -1,6 +1,7 @@
 package com.project.order_service.service.impl;
 
 import com.project.order_service.entity.Order;
+import com.project.order_service.external.client.ProductService;
 import com.project.order_service.model.OrderRequest;
 import com.project.order_service.repository.OrderRepository;
 import com.project.order_service.service.OrderService;
@@ -18,11 +19,17 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private OrderRepository orderRepository;
 
+    @Autowired
+    private ProductService productService;
+
     @Transactional
     @Override
     public long placeOrder(OrderRequest request) {
         log.info("Placing order...");
 
+        productService.reduceQuantity(request.getProductId(), request.getQuantity());
+
+        log.info("Creating order...");
         Order order = Order.builder()
                 .totalAmount(request.getTotalAmount())
                 .orderStatus("CREATED")
@@ -32,8 +39,6 @@ public class OrderServiceImpl implements OrderService {
                 .build();
 
         orderRepository.save(order);
-
-        // reduce quantity from product service
 
         // call payment service to check out - success ou cancelled
 
