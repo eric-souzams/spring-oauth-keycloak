@@ -1,6 +1,6 @@
 package com.project.order_service.controller;
 
-import com.project.order_service.model.OrderRequest;
+import com.project.order_service.external.request.OrderRequest;
 import com.project.order_service.service.OrderService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;

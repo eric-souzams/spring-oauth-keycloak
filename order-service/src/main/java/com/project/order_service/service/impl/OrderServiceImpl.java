@@ -1,8 +1,10 @@
 package com.project.order_service.service.impl;
 
 import com.project.order_service.entity.Order;
+import com.project.order_service.external.client.PaymentService;
 import com.project.order_service.external.client.ProductService;
-import com.project.order_service.model.OrderRequest;
+import com.project.order_service.external.request.OrderRequest;
+import com.project.order_service.external.request.PaymentRequest;
 import com.project.order_service.repository.OrderRepository;
 import com.project.order_service.service.OrderService;
 import lombok.extern.log4j.Log4j2;
@@ -22,6 +24,9 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private ProductService productService;
 
+    @Autowired
+    private PaymentService paymentService;
+
     @Transactional
     @Override
     public long placeOrder(OrderRequest request) {
@@ -40,9 +45,30 @@ public class OrderServiceImpl implements OrderService {
 
         orderRepository.save(order);
 
-        // call payment service to check out - success ou cancelled
+        log.info("Calling payment service to complete the payment...");
 
-        log.info("Order placed...");
+        String orderStatus = null;
+        PaymentRequest paymentRequest = PaymentRequest.builder()
+                .orderId(order.getOrderId())
+                .paymentMode(request.getPaymentMode())
+                .totalAmount(request.getTotalAmount())
+                .build();
+
+        try {
+            paymentService.doPayment(paymentRequest);
+            log.info("Payment done with successfully...");
+            log.info("Changing order {} status to PLACED...", order.getOrderId());
+            orderStatus = "PLACED";
+        } catch (Exception e) {
+            log.error("An error occurred in payment service...");
+            log.error("Changing order {} status to PAYMENT_FAILED...", order.getOrderId());
+            orderStatus = "PAYMENT_FAILED";
+        }
+
+        order.setOrderStatus(orderStatus);
+        orderRepository.save(order);
+
+        log.info("Order placed with successfully...");
 
         return order.getOrderId();
     }
