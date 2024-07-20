@@ -1,4 +1,4 @@
-version: '3.4'
+version: '3.7'
 
 services:
   zipkin-server:
@@ -6,8 +6,26 @@ services:
     restart: always
     ports:
       - 9411:9411
+    volumes:
+      - 'zipkin_data:/openzipkin/zipkin/data'
     networks:
       - sc-network
+
+  redis:
+    image: bitnami/redis:latest
+    restart: always
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - '6379:6379'
+    volumes:
+      - 'redis_data:/bitnami/redis/data'
+    networks:
+      - sc-network
+
+volumes:
+  zipkin_data:
+  redis_data:
 
 networks:
   sc-network:
