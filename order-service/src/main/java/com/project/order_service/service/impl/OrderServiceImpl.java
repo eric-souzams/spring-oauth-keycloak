@@ -1,16 +1,21 @@
 package com.project.order_service.service.impl;
 
 import com.project.order_service.entity.Order;
+import com.project.order_service.exception.CustomErrorException;
 import com.project.order_service.external.client.PaymentService;
 import com.project.order_service.external.client.ProductService;
-import com.project.order_service.external.request.OrderRequest;
+import com.project.order_service.model.OrderRequest;
 import com.project.order_service.external.request.PaymentRequest;
+import com.project.order_service.model.OrderResponse;
+import com.project.order_service.model.ProductDetailsResponse;
+import com.project.order_service.model.TransactionDetailsResponse;
 import com.project.order_service.repository.OrderRepository;
 import com.project.order_service.service.OrderService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
 
@@ -26,6 +31,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private PaymentService paymentService;
+
+    @Autowired
+    private RestTemplate restTemplate;
 
     @Transactional
     @Override
@@ -71,5 +79,37 @@ public class OrderServiceImpl implements OrderService {
         log.info("Order placed with successfully...");
 
         return order.getOrderId();
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public OrderResponse getOrderDetails(long orderId) {
+        log.info("Getting order details for order {}...", orderId);
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new CustomErrorException("Order not found fot the order id " + orderId, "NOT_FOUND", 404));
+
+        log.info("Invoking product service to fetch the product {}...", order.getProductId());
+
+        ProductDetailsResponse productDetailsResponse = restTemplate.getForObject(
+                "http://PRODUCT-SERVICE/v1/products/" + order.getProductId(),
+                ProductDetailsResponse.class
+        );
+
+        log.info("Invoking payment service to fetch the transaction details...");
+
+        TransactionDetailsResponse transactionDetailsResponse = restTemplate.getForObject(
+                "http://PAYMENT-SERVICE/v1/payments/orders/" + orderId,
+                TransactionDetailsResponse.class
+        );
+
+        return OrderResponse.builder()
+                .orderId(order.getOrderId())
+                .orderStatus(order.getOrderStatus())
+                .totalAmount(order.getTotalAmount())
+                .orderDate(order.getOrderDate())
+                .productDetails(productDetailsResponse)
+                .transactionDetails(transactionDetailsResponse)
+                .build();
     }
 }

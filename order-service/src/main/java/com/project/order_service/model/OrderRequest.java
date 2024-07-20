@@ -1,4 +1,4 @@
-package com.project.order_service.external.request;
+package com.project.order_service.model;
 
 import com.project.order_service.enums.PaymentMode;
 import lombok.*;
