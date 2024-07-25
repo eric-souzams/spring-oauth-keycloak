@@ -1,11 +1,26 @@
 version: '3.7'
 
 services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0.2
+    restart: always
+    ports:
+      - '8080:8080'
+    volumes:
+      - 'keycloak_data:/keycloak/data'
+    networks:
+      - sc-network
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+    command:
+      - start-dev
+
   zipkin-server:
     image: openzipkin/zipkin:3.4.0
     restart: always
     ports:
-      - 9411:9411
+      - '9411:9411'
     volumes:
       - 'zipkin_data:/openzipkin/zipkin/data'
     networks:
@@ -26,6 +41,7 @@ services:
 volumes:
   zipkin_data:
   redis_data:
+  keycloak_data:
 
 networks:
   sc-network:

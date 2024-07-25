@@ -15,6 +15,34 @@ spring:
       ddl-auto: update
   config:
     import: configserver:http://localhost:9296
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            client-id: login-v1-microservice
+            client-secret: HG2Ooa8ydPNcZu3thlp8VJyCmFimSWUa
+            authorization-grant-type: authorization_code
+            redirect-uri: http://localhost:9090/login/oauth2/code/keycloak
+            provider: keycloak
+            scope:
+              - openid
+              - roles
+              - profile
+              - offline_access
+              - internal
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:8080/realms/v1-microservices
+            token-uri: http://localhost:8080/realms/v1-microservices/protocol/openid-connect/token
+            authorization-uri: http://localhost:8080/realms/v1-microservices/protocol/openid-connect/auth
+            userinfo-uri: http://localhost:8080/realms/v1-microservices/protocol/openid-connect/userinfo
+            jwk-set-uri: http://localhost:8080/realms/v1-microservices/protocol/openid-connect/certs
+#            user-name-attribute: email
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8080/realms/v1-microservices
+          jwk-set-uri: http://localhost:8080/realms/v1-microservices/protocol/openid-connect/certs
 
 resilience4j:
   circuitbreaker:
@@ -22,7 +50,7 @@ resilience4j:
       external:
         event-consumer-buffer-size: 10
         failure-rate-threshold: 50
-        minimum-number-of-calls: 5
+        minimum-number-of-calls: 10
         automatic-transition-from-open-to-half-open-enabled: true
         wait-duration-in-open-state: 5s
         permitted-number-of-calls-in-half-open-state: 3
@@ -38,5 +66,14 @@ management:
       endpoint: ${ZIPKIN_SERVER_ADDRESS:http://localhost:9411/api/v2/spans}
 
 logging:
+  level:
+    org:
+      springframework:
+#        security: DEBUG
+#        web: DEBUG
   pattern:
     level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
+
+feign:
+  circuitbreaker:
+    enabled: true

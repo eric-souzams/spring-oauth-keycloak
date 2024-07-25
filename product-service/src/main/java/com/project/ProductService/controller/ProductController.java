@@ -6,6 +6,7 @@ import com.project.ProductService.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -15,6 +16,7 @@ public class ProductController {
     @Autowired
     private ProductService productService;
 
+    @PreAuthorize("hasAuthority('ADMIN') || hasAuthority('SCOPE_internal')")
     @PostMapping
     public ResponseEntity<Long> addProduct(@RequestBody ProductRequest request) {
         long productId = productService.addProduct(request);
@@ -22,6 +24,7 @@ public class ProductController {
         return ResponseEntity.status(HttpStatus.CREATED).body(productId);
     }
 
+    @PreAuthorize("hasAuthority('ADMIN') || hasAuthority('CUSTOMER') || hasAuthority('SCOPE_internal')")
     @GetMapping("/{productId}")
     public ResponseEntity<ProductResponse> getProductById(@PathVariable("productId") long productId) {
         ProductResponse response = productService.getProductById(productId);
