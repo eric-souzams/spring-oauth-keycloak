@@ -51,7 +51,7 @@ public class OrderServiceImpl implements OrderService {
                 .orderDate(Instant.now())
                 .build();
 
-        orderRepository.save(order);
+        order = orderRepository.save(order);
 
         log.info("Calling payment service to complete the payment...");
 
